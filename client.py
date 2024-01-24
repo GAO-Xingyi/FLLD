@@ -1,40 +1,74 @@
-import numpy as np
+"""
+id：客户端的标识
+train_data：客户端的训练数据
+test_data：客户端的测试数据
+model：客户端使用的模型
+optimizer：客户端使用的优化器
+lr：客户端使用的学习率
+batch_size：客户端使用的批大小
+num_epochs：客户端的训练轮数
+
+train()方法用于训练客户端模型。该方法将训练数据分批送入模型进行训练。
+
+evaluate()方法用于评估客户端模型的性能。该方法将测试数据送入模型进行预测，并计算预测的准确率。
+
+get_parameters()方法用于获取客户端模型的参数。
+
+set_parameters()方法用于设置客户端模型的参数。
+"""
+
+import torch
+
+class Client(object):
+
+    def __init__(self, id, train_data, test_data, model, optimizer, lr, batch_size, num_epochs):
+        self.id = id
+        self.train_data = train_data
+        self.test_data = test_data
+        self.model = model
+        self.optimizer = optimizer
+        self.lr = lr
+        self.batch_size = batch_size
+        self.num_epochs = num_epochs
+
+    def train(self):
+        for epoch in range(self.num_epochs):
+            for batch_idx, (data, target) in enumerate(self.train_data):
+                self.optimizer.zero_grad()
+                output = self.model(data)
+                loss = torch.nn.functional.cross_entropy(output, target)
+                loss.backward()
+                self.optimizer.step()
+
+    def evaluate(self):
+        correct = 0
+        total = 0
+        with torch.no_grad():
+            for data, target in self.test_data:
+                output = self.model(data)
+                pred = output.argmax(dim=1, keepdim=True)
+                correct += pred.eq(target.view_as(pred)).sum().item()
+                total += target.size(0)
+        return correct / total
+
+    def get_parameters(self):
+        return self.model.state_dict()
+
+    def set_parameters(self, parameters):
+        self.model.load_state_dict(parameters)
 
 
-class Client:
-    def __init__(self, client_id, local_data):
-        self.client_id = client_id
-        self.local_data = local_data
-        self.local_model = None
-        self.local_gradients = None
+"""
+# 定义客户端
+client1 = Client(1, train_data1, test_data1, model, optimizer, lr, batch_size, num_epochs)
+client2 = Client(2, train_data2, test_data2, model, optimizer, lr, batch_size, num_epochs)
 
-    def download_model(self, global_model):
-        # 下载全局模型到本地
-        self.local_model = global_model.copy()
+# 训练客户端
+client1.train()
+client2.train()
 
-    def upload_gradients(self):
-        # 模拟本地训练并计算梯度
-        # 在实际场景中，你应该使用你的机器学习框架在本地数据上进行训练并计算梯度。
-        self.local_gradients = self.compute_gradients()
+# 评估客户端
+print("client1 accuracy:", client1.evaluate())
+print("client2 accuracy:", client2.evaluate())
 
-    def poison_data(self, attack_percentage):
-        # 模拟数据毒化，修改一定比例的本地数据
-        num_poisoned_samples = int(len(self.local_data) * attack_percentage)
-        indices_to_poison = np.random.choice(len(self.local_data), num_poisoned_samples, replace=False)
-
-        for idx in indices_to_poison:
-            # 修改数据（例如，更改标签或特征）以引入毒素
-            # 在实际场景中，你应该精心设计毒素，以影响全局模型。
-            self.local_data[idx] = self.modify_data(self.local_data[idx])
-
-    def compute_gradients(self):
-        # 梯度计算的占位符
-        # 在实际场景中，你应该使用你的机器学习框架在本地数据上进行训练并计算梯度。
-        # 这里，我们简单地返回随机梯度作为占位符。
-        return np.random.rand()
-
-    def modify_data(self, data_point):
-        # 数据修改的占位符（例如，用于数据毒化）
-        # 在实际场景中，你应该精心设计修改。
-        # 这里，我们简单地返回相同的数据点作为占位符。
-        return data_point
+"""
