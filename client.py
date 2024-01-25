@@ -1,74 +1,49 @@
-"""
-id：客户端的标识
-train_data：客户端的训练数据
-test_data：客户端的测试数据
-model：客户端使用的模型
-optimizer：客户端使用的优化器
-lr：客户端使用的学习率
-batch_size：客户端使用的批大小
-num_epochs：客户端的训练轮数
-
-train()方法用于训练客户端模型。该方法将训练数据分批送入模型进行训练。
-
-evaluate()方法用于评估客户端模型的性能。该方法将测试数据送入模型进行预测，并计算预测的准确率。
-
-get_parameters()方法用于获取客户端模型的参数。
-
-set_parameters()方法用于设置客户端模型的参数。
-"""
-
 import torch
+import torch.optim as optim
+import copy
 
-class Client(object):
+class Client:
+    def __init__(self, client_id, local_model, train_loader, test_loader, learning_rate=0.01):
+        self.client_id = client_id
+        self.local_model = local_model
+        self.train_loader = train_loader
+        self.test_loader = test_loader
+        self.learning_rate = learning_rate
+        self.optimizer = optim.SGD(self.local_model.parameters(), lr=self.learning_rate)
 
-    def __init__(self, id, train_data, test_data, model, optimizer, lr, batch_size, num_epochs):
-        self.id = id
-        self.train_data = train_data
-        self.test_data = test_data
-        self.model = model
-        self.optimizer = optimizer
-        self.lr = lr
-        self.batch_size = batch_size
-        self.num_epochs = num_epochs
-
-    def train(self):
-        for epoch in range(self.num_epochs):
-            for batch_idx, (data, target) in enumerate(self.train_data):
+    #执行本地模型的训练，使用客户端自己的训练数据
+    def train(self, num_epochs=1):
+        self.local_model.train()
+        for epoch in range(num_epochs):
+            for data, target in self.train_loader:
                 self.optimizer.zero_grad()
-                output = self.model(data)
-                loss = torch.nn.functional.cross_entropy(output, target)
+                output = self.local_model(data)
+                loss = torch.nn.functional.nll_loss(output, target)
                 loss.backward()
                 self.optimizer.step()
 
-    def evaluate(self):
+    #在本地模型上执行测试，返回测试损失和准确度。
+    def test(self):
+        self.local_model.eval()
+        test_loss = 0
         correct = 0
-        total = 0
         with torch.no_grad():
-            for data, target in self.test_data:
-                output = self.model(data)
+            for data, target in self.test_loader:
+                output = self.local_model(data)
+                test_loss += torch.nn.functional.nll_loss(output, target, reduction='sum').item()
                 pred = output.argmax(dim=1, keepdim=True)
                 correct += pred.eq(target.view_as(pred)).sum().item()
-                total += target.size(0)
-        return correct / total
 
-    def get_parameters(self):
-        return self.model.state_dict()
+        test_loss /= len(self.test_loader.dataset)
+        accuracy = correct / len(self.test_loader.dataset)
+        return test_loss, accuracy
 
-    def set_parameters(self, parameters):
-        self.model.load_state_dict(parameters)
+    #返回本地模型的深层拷贝，用于在每轮训练结束后发送给协调器。
+    def get_local_model(self):
+        # Return a deep copy of the local model
+        return copy.deepcopy(self.local_model)
 
-
-"""
-# 定义客户端
-client1 = Client(1, train_data1, test_data1, model, optimizer, lr, batch_size, num_epochs)
-client2 = Client(2, train_data2, test_data2, model, optimizer, lr, batch_size, num_epochs)
-
-# 训练客户端
-client1.train()
-client2.train()
-
-# 评估客户端
-print("client1 accuracy:", client1.evaluate())
-print("client2 accuracy:", client2.evaluate())
-
-"""
+    #从全局模型接收更新，更新本地模型的权重。
+    def update_local_model(self, global_model):
+        # Update the local model with the global model
+        self.local_model.load_state_dict(global_model.state_dict())

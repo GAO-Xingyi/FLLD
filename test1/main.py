@@ -1,39 +1,43 @@
-import syft as sy
+import sys
+sys.path.append("..")
+
 import torch
-from net.Federated_EMNIST_net import Net
-import federated_emnist
+from torchvision import datasets, transforms
+from torch.utils.data import DataLoader
 
+from client import Client
+from FederatedCoordinator import FederatedCoordinator
+from net.MNISTNet import MNISTNet  # 请替换成你的网络模块
 
-# 创建一个联邦学习服务器
-server = sy.Server()
+# 定义一些超参数
+num_clients = 5
+num_epochs = 3
 
-# 创建 5 个客户端
-clients = [
-    sy.VirtualWorker(server, id="client1"),
-    sy.VirtualWorker(server, id="client2"),
-    sy.VirtualWorker(server, id="client3"),
-    sy.VirtualWorker(server, id="client4"),
-    sy.VirtualWorker(server, id="client5"),
-]
+# 加载 MNIST 数据集
+transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize((0.5,), (0.5,))
+])
 
-# 在每个客户端上实例化模型
-model = Net()
-model = model.share(clients)
+train_dataset = datasets.MNIST(root='./data', train=True, download=True, transform=transform)
+train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
 
-# 加载数据集
-federated_emnist = sy.FederatedDataset(clients, federated_emnist.load_data())
+# 创建全局模型
+global_model = MNISTNet()
 
-# 训练模型
-for epoch in range(10):
-    # 在每个客户端上训练模型
+# 创建模拟客户端
+clients = [Client(client_id=i, local_model=MNISTNet(), train_loader=train_loader, test_loader=train_loader) for i in range(num_clients)]
+
+# 创建联邦学习协调器
+coordinator = FederatedCoordinator(global_model, clients)
+
+# 进行联邦学习
+for epoch in range(num_epochs):
+    coordinator.federated_learning()
+
+    # 打印每个客户端的ID和对应模型参数
     for client in clients:
-        client.send(model)
-        client.train(model, federated_emnist)
+        print(f"Client ID: {client.client_id}, Model Parameters: {client.get_local_model().state_dict()}")
 
-# 保存每个模型训练完的参数
-parameters = {}
-for client in clients:
-    parameters[client.id] = client.get(model)
-
-# 打印参数
-print(parameters)
+# 最终打印全局模型参数
+print("Global Model Parameters:", global_model.state_dict())
