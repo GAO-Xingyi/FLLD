@@ -24,7 +24,7 @@ class SGLDProcess:
         for _ in range(self.num_samples):
             # 执行一次梯度计算
             for client in self.clients:
-                cloned_client = copy.deepcopy(client)
+                cloned_client = copy.deepcopy(client.local_model)
                 cloned_client.get_local_model().train()
                 cloned_client.get_local_model().zero_grad()
 
@@ -32,6 +32,10 @@ class SGLDProcess:
                     output = cloned_client.get_local_model()(data)
                     loss = nn.functional.nll_loss(output, target)
                     loss.backward()
+
+                    # 添加以下打印语句以检查梯度
+                    for param in cloned_client.get_local_model().parameters():
+                        print(f"Gradient for {param}: {param.grad}")
 
             # 在每个客户端上执行 SGLD 步骤
             self.sgld_step()

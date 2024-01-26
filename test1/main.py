@@ -8,12 +8,12 @@ from net.MNISTNet import MNISTNet
 from data.DatasetLoader import DatasetLoader
 
 # 定义一些超参数
-num_clients = 5
-num_epochs = 3
+num_clients = 2      # 5
+num_epochs = 1    #3
 sgld_samples = 5
-num_epochs_update = 5
-num_epochs_client = 10
-num_epochs_pretrain = 10
+num_epochs_update = 1   #5
+num_epochs_client = 2   #10
+num_epochs_pretrain = 1  #10
 
 # # 数据集加载器
 # mnist_loader = DatasetLoader(dataset_name='MNIST')

@@ -13,7 +13,16 @@ class Client:
         self.test_loader = test_loader
         self.learning_rate = learning_rate
         self.num_epochs = num_epochs
+
         self.optimizer = optim.SGD(self.local_model.parameters(), lr=self.learning_rate)
+        # # 根据 local_model 的类型进行判断
+        # if isinstance(local_model, Client):
+        #     # 如果 local_model 是 Client 类的实例，使用 Client 对象的参数
+        #     self.optimizer = optim.SGD(self.local_model.get_local_model().parameters(), lr=self.learning_rate)
+        # else:
+        #     # 否则，假定 local_model 是 nn.Module 的实例，使用其参数
+        #     self.optimizer = optim.SGD(self.local_model.parameters(), lr=self.learning_rate)
+
         self.dataset_type = dataset_type
         self.num_pretrain_epochs = num_pretrain_epochs
 
@@ -47,7 +56,7 @@ class Client:
             print(f"客户端 {self.client_id} - Epoch {epoch + 1}/{self.num_epochs}")
             for batch_idx, (data, target) in enumerate(self.train_loader):
                 self.optimizer.zero_grad()
-                output = self.local_model(data)
+                output = self.local_model.forward(data)  # 明确调用 forward 方法
                 loss = torch.nn.functional.cross_entropy(output, target)
                 loss.backward()
                 self.optimizer.step()
@@ -60,7 +69,7 @@ class Client:
             print(f"客户端 {self.client_id} - Epoch {epoch + 1}/{self.num_epochs}")
             for batch_idx, (data, target) in enumerate(self.train_loader):
                 self.optimizer.zero_grad()
-                output = self.local_model(data)
+                output = self.local_model.forward(data)  # 明确调用 forward 方法
                 loss = torch.nn.functional.cross_entropy(output, target)
                 loss.backward()
                 self.optimizer.step()

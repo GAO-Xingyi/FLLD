@@ -44,6 +44,7 @@ class FederatedCoordinator:
                              test_loader=test_loader, dataset_type=self.dataset_name,
                              num_pretrain_epochs=self.num_epochs_pretrain)
         self.pure_client = pure_client
+        self.global_model = self.pure_client.local_model
 
         # 预训练纯净样本机
         self.pure_client.pretrain()
@@ -59,7 +60,7 @@ class FederatedCoordinator:
             train_loader = client_loader.get_dataloader(train=True)
             test_loader = client_loader.get_dataloader(train=False)
 
-            client_model = copy.deepcopy(self.pure_client)
+            client_model = copy.deepcopy(self.global_model)
             client = Client(client_id=i, local_model=client_model, train_loader=train_loader,
                             test_loader=test_loader, dataset_type=self.dataset_name,
                             num_epochs=self.num_epochs_client)
