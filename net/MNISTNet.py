@@ -5,16 +5,12 @@ import torch.nn.functional as F
 class MNISTNet(nn.Module):
     def __init__(self):
         super(MNISTNet, self).__init__()
-        self.conv1 = nn.Conv2d(1, 32, 3, 1)
-        self.conv2 = nn.Conv2d(32, 64, 3, 1)
-        self.fc1 = nn.Linear(1024, 128)
-        self.fc2 = nn.Linear(128, 10)
+        self.fc1 = nn.Linear(784, 128)
+        self.fc2 = nn.Linear(128, 10)  # 输出10个类别
 
     def forward(self, x):
-        x = F.relu(self.conv1(x))
-        x = F.relu(self.conv2(x))
-        x = F.max_pool2d(x, 2)
-        x = x.view(-1, 1024)
+        x = x.view(-1, 784)  # 将图像展平
         x = F.relu(self.fc1(x))
         x = self.fc2(x)
-        return F.log_softmax(x, dim=1)
+        return F.log_softmax(x, dim=1)  # 使用log_softmax作为输出
+

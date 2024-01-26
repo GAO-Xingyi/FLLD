@@ -1,43 +1,55 @@
 import sys
 sys.path.append("..")
 
-import torch
-from torchvision import datasets, transforms
-from torch.utils.data import DataLoader
-
+from torchvision import transforms
 from client import Client
 from FederatedCoordinator import FederatedCoordinator
-from net.MNISTNet import MNISTNet  # 请替换成你的网络模块
+from net.MNISTNet import MNISTNet
+from data.DatasetLoader import DatasetLoader
 
 # 定义一些超参数
 num_clients = 5
 num_epochs = 3
+sgld_samples = 5
+num_epochs_update = 5
+num_epochs_client = 10
+num_epochs_pretrain = 10
 
-# 加载 MNIST 数据集
-transform = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize((0.5,), (0.5,))
-])
-
-train_dataset = datasets.MNIST(root='./data', train=True, download=True, transform=transform)
-train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
+# # 数据集加载器
+# mnist_loader = DatasetLoader(dataset_name='MNIST')
 
 # 创建全局模型
 global_model = MNISTNet()
 
-# 创建模拟客户端
-clients = [Client(client_id=i, local_model=MNISTNet(), train_loader=train_loader, test_loader=train_loader) for i in range(num_clients)]
+# 创建模拟客户端，提供 dataset_type 参数
+# clients = [Client(client_id=i, local_model=MNISTNet(), train_loader=mnist_loader.get_dataloader(train=True),
+#                   test_loader=mnist_loader.get_dataloader(train=False), dataset_type='MNIST',
+#                   num_epochs=num_epochs_client) for i in range(num_clients)]
 
 # 创建联邦学习协调器
-coordinator = FederatedCoordinator(global_model, clients)
+server = FederatedCoordinator(global_model, 'MNIST', num_clients, num_epochs_pretrain, num_epochs_client,
+                              num_epochs_update, sgld_samples)
+
+#加载一份纯净数据实例化纯净样本机
+server.setup_pure_client()
+
+#创建模拟客户端
+clients = server.build_client()
 
 # 进行联邦学习
 for epoch in range(num_epochs):
-    coordinator.federated_learning()
+    # 外部循环epoch决定模型更新次数
+
+    server.federated_learning()
 
     # 打印每个客户端的ID和对应模型参数
     for client in clients:
-        print(f"Client ID: {client.client_id}, Model Parameters: {client.get_local_model().state_dict()}")
+        local_model_params = client.get_local_model().state_dict()
+        print(f"Client ID: {client.client_id}, Model Parameters: {local_model_params}")
+
+        # 打印每个参数的大小
+        for param_name, param in local_model_params.items():
+            print(f"  Parameter: {param_name}, Size: {param.size()}")
 
 # 最终打印全局模型参数
 print("Global Model Parameters:", global_model.state_dict())
