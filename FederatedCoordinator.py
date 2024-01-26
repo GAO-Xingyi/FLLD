@@ -84,6 +84,7 @@ class FederatedCoordinator:
             # Perform SGLD sampling and collect original and SGLD parameters
             sgld_process.startup()
 
+            ##这里实验一下，发现可以跑通，今天可以休息了
             # 获取客户端2的采样后的参数
             client_id_to_check = 1  # 请注意索引是从0开始的
             sgld_params_client2 = sgld_process.sgld_params[client_id_to_check]
@@ -92,6 +93,8 @@ class FederatedCoordinator:
             for param_name, param_tensor in sgld_params_client2.items():
                 print(f"Parameter Name: {param_name}")
                 print(param_tensor)
+
+
 
             # Collect local models from clients
             local_models = [client.get_local_model() for client in self.clients]

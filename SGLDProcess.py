@@ -13,11 +13,12 @@ class SGLDProcess:
         self.sgld_params = {}  # 存储 SGLD 参数的字典
         self.clients_sgld = None
 
-    def sgld_step(self):
-        for client in self.clients_sgld:
-            for param in client.get_local_model().parameters():
-                noise = torch.normal(0, self.noise_scale * torch.sqrt(torch.tensor(self.lr)), size=param.size())
-                param.data.add_(-self.lr * param.grad - noise)
+    # def sgld_step(self):
+    #     for client in self.clients_sgld:
+    #         for param in client.get_local_model().parameters():
+    #             print(f"Gradient for {param}: {param.grad}")
+    #             noise = torch.normal(0, self.noise_scale * torch.sqrt(torch.tensor(self.lr)), size=param.size())
+    #             param.data.add_(-self.lr * param.grad - noise)
 
     def sample(self):
         sampled_models = []
@@ -35,15 +36,21 @@ class SGLDProcess:
                     loss = nn.functional.nll_loss(output, target)
                     loss.backward()
 
-                    # 添加以下打印语句以检查梯度
-                    for param in cloned_client.parameters():
-                        print(f"Gradient for {param}: {param.grad}")
+                    # # 添加以下打印语句以检查梯度
+                    # for param in cloned_client.parameters():
+                    #     print(f"Gradient for {param}: {param.grad}")
 
+                for param in cloned_client.parameters():
+                    print(f"Gradient for {param}: {param.grad}")
+                    noise = torch.normal(0, self.noise_scale * torch.sqrt(torch.tensor(self.lr)), size=param.size())
+                    param.data.add_(-self.lr * param.grad - noise)
             # 在每个客户端上执行 SGLD 步骤
-            self.sgld_step()
+            # self.sgld_step()
+                client.local_model = cloned_client
 
             # 将当前模型添加到样本中
             for client in self.clients_sgld:
+
                 sampled_models.append(copy.deepcopy(client.get_local_model()))
 
         return sampled_models
