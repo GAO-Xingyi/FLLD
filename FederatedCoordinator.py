@@ -6,6 +6,7 @@ from SGLDProcess import SGLDProcess
 from client import Client
 from data.DatasetLoader import DatasetLoader
 
+
 class FederatedCoordinator:
     def __init__(self, global_model, dataset_name, num_clients, num_epochs_pretrain=10,
                  num_epochs_client=10, num_epochs_update=5, sgld_samples=5):
@@ -52,6 +53,8 @@ class FederatedCoordinator:
         # 保存纯净样本机的参数
         self.initial_params = self.pure_client.get_local_model().state_dict()
 
+        print("cure machine", self.pure_client.local_model)
+
     def build_client(self):
         clients = []
         for i in range(self.num_clients):
@@ -80,9 +83,20 @@ class FederatedCoordinator:
             for client in self.clients:
                 client.train()
 
+            self.pure_client.train()
+
             sgld_process = SGLDProcess(self.clients, self.pure_train_loader, self.sgld_samples)
             # Perform SGLD sampling and collect original and SGLD parameters
             sgld_process.startup()
+
+            # self.pure_client = [self.pure_client]
+            pure_sample = SGLDProcess([self.pure_client], self.pure_train_loader, self.sgld_samples)
+            pure_sample.startup()
+
+
+
+            pure_params = pure_sample.sgld_params
+            print("pure params", pure_params)
 
             ##这里实验一下，发现可以跑通，今天可以休息了
             # 获取客户端2的采样后的参数
@@ -96,6 +110,8 @@ class FederatedCoordinator:
 
 
 
+
+"""
             # Collect local models from clients
             local_models = [client.get_local_model() for client in self.clients]
 
@@ -108,3 +124,4 @@ class FederatedCoordinator:
             # Share updated global model with clients
             for client in self.clients:
                 client.update_local_model(self.global_model)
+"""

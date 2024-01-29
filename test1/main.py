@@ -35,6 +35,7 @@ server.setup_pure_client()
 
 #创建模拟客户端
 clients = server.build_client()
+pure_client = server.pure_client
 
 # 进行联邦学习
 for epoch in range(num_epochs):
@@ -42,14 +43,19 @@ for epoch in range(num_epochs):
 
     server.federated_learning()
 
+
     # 打印每个客户端的ID和对应模型参数
     for client in clients:
         local_model_params = client.get_local_model().state_dict()
-        print(f"Client ID: {client.client_id}, Model Parameters: {local_model_params}")
+        # print(f"Client ID: {client.client_id}, Model Parameters: {local_model_params}")
 
         # 打印每个参数的大小
         for param_name, param in local_model_params.items():
-            print(f"  Parameter: {param_name}, Size: {param.size()}")
+            print(f"  client Parameter: {param_name}, Size: {param.size()}")
 
-# 最终打印全局模型参数
-print("Global Model Parameters:", global_model.state_dict())
+    pure_model_params = pure_client.get_local_model().state_dict()
+    for param_name, param in pure_model_params.items():
+        print(f"  pure_client Parameter: {param_name}, Size: {param.size()}")
+
+# # 最终打印全局模型参数
+# print("Global Model Parameters:", global_model.state_dict())

@@ -22,9 +22,9 @@ class SGLDProcess:
 
     def sample(self):
         sampled_models = []
+        self.clients_sgld = self.clients
 
         for _ in range(self.num_samples):
-            self.clients_sgld = self.clients
             # 执行一次梯度计算
             for client in self.clients_sgld:
                 cloned_client = client.local_model
@@ -44,8 +44,8 @@ class SGLDProcess:
                     print(f"Gradient for {param}: {param.grad}")
                     noise = torch.normal(0, self.noise_scale * torch.sqrt(torch.tensor(self.lr)), size=param.size())
                     param.data.add_(-self.lr * param.grad - noise)
-            # 在每个客户端上执行 SGLD 步骤
-            # self.sgld_step()
+                # 在每个客户端上执行 SGLD 步骤
+                # self.sgld_step()
                 client.local_model = cloned_client
 
             # 将当前模型添加到样本中
