@@ -1,10 +1,13 @@
 import sys
+
 sys.path.append("..")
+
 import copy
 import torch
 from SGLDProcess import SGLDProcess
 from client import Client
 from data.DatasetLoader import DatasetLoader
+from AttentionMechanism import AttentionAggregator
 
 
 class FederatedCoordinator:
@@ -22,6 +25,7 @@ class FederatedCoordinator:
         self.initial_params = None
         self.clients = None
         self.pure_client = None
+        self.attention_scores = None
 
     def average_aggregation(self, models):
         avg_state_dict = {}
@@ -93,10 +97,19 @@ class FederatedCoordinator:
             pure_sample = SGLDProcess([self.pure_client], self.pure_train_loader, self.sgld_samples)
             pure_sample.startup()
 
+            attention_aggregator = AttentionAggregator()
+            for client in self.clients:
+                client_sgld_params = sgld_process.sgld_params[client.client_id]  # 假设第一个客户端的参数
+                pure_client_sgld_params = pure_sample.sgld_params["PureClient"]  # 纯净样本机的参数
+                self.attention_scores = attention_aggregator.calculate_attention_scores(client_sgld_params,
+                                                                               pure_client_sgld_params)
+
+            ## attention 机制做好了，明天要评估在毒化攻击下Attention分数是否可以检测到
+
 
 
             pure_params = pure_sample.sgld_params
-            print("pure params", pure_params)
+            print("pure params", torch.Tensor([pure_params[key] for key in pure_params]).size())
 
             ##这里实验一下，发现可以跑通，今天可以休息了
             # 获取客户端2的采样后的参数
@@ -108,9 +121,7 @@ class FederatedCoordinator:
                 print(f"Parameter Name: {param_name}")
                 print(param_tensor)
 
-
-
-
+            print("attention_scores:", self.attention_scores)
 """
             # Collect local models from clients
             local_models = [client.get_local_model() for client in self.clients]
