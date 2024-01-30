@@ -10,10 +10,10 @@ from data.DatasetLoader import DatasetLoader
 # 定义一些超参数
 num_clients = 2      # 5
 num_epochs = 1    #3
-sgld_samples = 5
+sgld_samples = 5   #10 后验分布采样样本数 20
 num_epochs_update = 1   #5
-num_epochs_client = 2   #10
-num_epochs_pretrain = 1  #10
+num_epochs_client = 5   #10 20
+num_epochs_pretrain = 10  #10
 
 # # 数据集加载器
 # mnist_loader = DatasetLoader(dataset_name='MNIST')
@@ -44,6 +44,8 @@ for epoch in range(num_epochs):
     server.federated_learning()
 
 
+
+"""
     # 打印每个客户端的ID和对应模型参数
     for client in clients:
         local_model_params = client.get_local_model().state_dict()
@@ -56,6 +58,6 @@ for epoch in range(num_epochs):
     pure_model_params = pure_client.get_local_model().state_dict()
     for param_name, param in pure_model_params.items():
         print(f"  pure_client Parameter: {param_name}, Size: {param.size()}")
-
+"""
 # # 最终打印全局模型参数
 # print("Global Model Parameters:", global_model.state_dict())

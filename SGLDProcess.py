@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import copy
+from tqdm import tqdm
 
 class SGLDProcess:
     def __init__(self, clients, pure_data_loader, num_samples, lr=0.01, noise_scale=0.1):
@@ -31,7 +32,11 @@ class SGLDProcess:
                 cloned_client.train()
                 cloned_client.zero_grad()
 
-                for data, target in self.pure_data_loader:
+                # 使用 tqdm 创建进度条
+                data_loader = tqdm(self.pure_data_loader, desc=f'client - {client.client_id} Sampling '
+                                                               f'{_ + 1}/{self.num_samples}', leave=False)
+
+                for data, target in data_loader:
                     output = cloned_client(data)
                     loss = nn.functional.nll_loss(output, target)
                     loss.backward()
@@ -40,10 +45,10 @@ class SGLDProcess:
                     # for param in cloned_client.parameters():
                     #     print(f"Gradient for {param}: {param.grad}")
 
-                for param in cloned_client.parameters():
-                    print(f"Gradient for {param}: {param.grad}")
-                    noise = torch.normal(0, self.noise_scale * torch.sqrt(torch.tensor(self.lr)), size=param.size())
-                    param.data.add_(-self.lr * param.grad - noise)
+                    for param in cloned_client.parameters():
+                        #print(f"Gradient for {param}: {param.grad}")
+                        noise = torch.normal(0, self.noise_scale * torch.sqrt(torch.tensor(self.lr)), size=param.size())
+                        param.data.add_(-self.lr * param.grad - noise)
                 # 在每个客户端上执行 SGLD 步骤
                 # self.sgld_step()
                 client.local_model = cloned_client

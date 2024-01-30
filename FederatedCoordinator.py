@@ -25,7 +25,7 @@ class FederatedCoordinator:
         self.initial_params = None
         self.clients = None
         self.pure_client = None
-        self.attention_scores = None
+        self.attention_scores = {}
 
     def average_aggregation(self, models):
         avg_state_dict = {}
@@ -37,8 +37,8 @@ class FederatedCoordinator:
     def setup_pure_client(self):
         # 实例化纯净样本机
         dataset_loader = DatasetLoader(self.dataset_name)
-        train_loader = dataset_loader.get_dataloader(train=True)
-        test_loader = dataset_loader.get_dataloader(train=False)
+        train_loader = dataset_loader.get_dataloader(train=True, client_id="PureClient", num_clients=self.num_clients)
+        test_loader = dataset_loader.get_dataloader(train=False, client_id="PureClient", num_clients=self.num_clients)
 
         self.pure_train_loader = train_loader
         self.pure_test_loader = test_loader
@@ -64,8 +64,8 @@ class FederatedCoordinator:
         for i in range(self.num_clients):
             # 使用不同的数据加载器或不同的数据集
             client_loader = DatasetLoader(dataset_name=self.dataset_name)
-            train_loader = client_loader.get_dataloader(train=True)
-            test_loader = client_loader.get_dataloader(train=False)
+            train_loader = client_loader.get_dataloader(train=True, client_id=i, num_clients=self.num_clients)
+            test_loader = client_loader.get_dataloader(train=False, client_id=i, num_clients=self.num_clients)
 
             client_model = copy.deepcopy(self.global_model)
             client = Client(client_id=i, local_model=client_model, train_loader=train_loader,
@@ -98,12 +98,17 @@ class FederatedCoordinator:
             pure_sample.startup()
 
             attention_aggregator = AttentionAggregator()
+            pure_client_sgld_params = pure_sample.sgld_params["PureClient"]
             for client in self.clients:
                 client_sgld_params = sgld_process.sgld_params[client.client_id]
-                pure_client_sgld_params = pure_sample.sgld_params["PureClient"]
-                self.attention_scores = attention_aggregator.calculate_attention_scores(client_sgld_params,
-                                                                                        pure_client_sgld_params)
+                print(client_sgld_params)
+                self.attention_scores[client.client_id] = attention_aggregator.calculate_attention_scores(
+                    client_sgld_params,
+                    pure_client_sgld_params)
 
+            print(self.attention_scores)
+            print(self.attention_scores[0])
+            print(self.attention_scores[1])
 
             ## attention 机制做好了，明天要评估在毒化攻击下Attention分数是否可以检测到
 

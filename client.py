@@ -1,6 +1,7 @@
 import torch
 import torch.optim as optim
 import copy
+from tqdm import tqdm
 
 class Client:
     def __init__(self, client_id, local_model, train_loader, test_loader, dataset_type, learning_rate=0.01, num_epochs=1,
@@ -32,8 +33,9 @@ class Client:
         """
         self.local_model.train()
         for epoch in range(self.num_pretrain_epochs):
-            print(f"客户端 {self.client_id} - 预训练 Epoch {epoch + 1}/{self.num_pretrain_epochs}")
-            for batch_idx, (data, target) in enumerate(self.train_loader):
+            # print(f"客户端 {self.client_id} - 预训练 Epoch {epoch + 1}/{self.num_pretrain_epochs}")
+            for batch_idx, (data, target) in tqdm(enumerate(self.train_loader),
+                                                  desc=f'Epoch {epoch + 1}/{self.num_pretrain_epochs}'):
                 self.optimizer.zero_grad()
                 output = self.local_model(data)
                 loss = torch.nn.functional.cross_entropy(output, target)
@@ -53,8 +55,11 @@ class Client:
     def train_mnist(self):
         self.local_model.train()
         for epoch in range(self.num_epochs):
-            print(f"客户端 {self.client_id} - Epoch {epoch + 1}/{self.num_epochs}")
-            for batch_idx, (data, target) in enumerate(self.train_loader):
+            # print(f"客户端 {self.client_id} - Epoch {epoch + 1}/{self.num_epochs}")
+            train_loader = tqdm(self.train_loader,
+                                desc=f'客户端 {self.client_id} - Epoch {epoch + 1}/{self.num_epochs}',
+                                leave=False)    # leave 参数控制在迭代完成后是否保留进度条
+            for batch_idx, (data, target) in enumerate(train_loader):
                 self.optimizer.zero_grad()
                 output = self.local_model.forward(data)  # 明确调用 forward 方法
                 loss = torch.nn.functional.cross_entropy(output, target)
@@ -66,8 +71,11 @@ class Client:
     def train_cifar10(self):
         self.local_model.train()
         for epoch in range(self.num_epochs):
-            print(f"客户端 {self.client_id} - Epoch {epoch + 1}/{self.num_epochs}")
-            for batch_idx, (data, target) in enumerate(self.train_loader):
+            # print(f"客户端 {self.client_id} - Epoch {epoch + 1}/{self.num_epochs}")
+            train_loader = tqdm(self.train_loader,
+                                desc=f'客户端 {self.client_id} - Epoch {epoch + 1}/{self.num_epochs}',
+                                leave=False)
+            for batch_idx, (data, target) in enumerate(train_loader):
                 self.optimizer.zero_grad()
                 output = self.local_model.forward(data)  # 明确调用 forward 方法
                 loss = torch.nn.functional.cross_entropy(output, target)
