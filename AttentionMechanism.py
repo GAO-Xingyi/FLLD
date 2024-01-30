@@ -7,12 +7,14 @@ class AttentionAggregator:
 
     def calculate_attention_scores(self, client_sgld_params, pure_client_sgld_params):
         attention_scores = {}
-        pure_client_param = pure_client_sgld_params["PureClient"]
         for param_name in client_sgld_params.keys():
             client_param = client_sgld_params[param_name]
+            pure_client_param = pure_client_sgld_params[param_name]
 
+            # 计算注意力分数，使用点积注意力并进行缩放
+            scale_factor = client_param.numel()  # 缩放因子为参数的数量
             # 计算注意力分数，使用点积注意力
-            attention_score = torch.sum(client_param * pure_client_param)
+            attention_score = torch.sum(client_param * pure_client_param) / scale_factor
 
             # 使用 sigmoid 激活
             attention_score = torch.sigmoid(attention_score)
