@@ -22,13 +22,14 @@ class SGLDProcess:
     #             param.data.add_(-self.lr * param.grad - noise)
 
     def sample(self):
-        sampled_models = []
+        sampled_models = {}
         self.clients_sgld = self.clients
 
         for _ in range(self.num_samples):
+            # client_params = {}
             # 执行一次梯度计算
             for client in self.clients_sgld:
-                cloned_client = client.local_model
+                cloned_client = client.get_local_model()
                 cloned_client.train()
                 cloned_client.zero_grad()
 
@@ -53,18 +54,24 @@ class SGLDProcess:
                 # self.sgld_step()
                 client.local_model = cloned_client
 
-            # 将当前模型添加到样本中
-            for client in self.clients_sgld:
+                # 将当前模型添加到客户端对应的样本列表中
+                if client.client_id not in sampled_models:
+                    sampled_models[client.client_id] = []
+                sampled_models[client.client_id].append(copy.deepcopy(cloned_client))
 
-                sampled_models.append(copy.deepcopy(client.get_local_model()))
+                # client_params[client.client_id] = copy.deepcopy(cloned_client)
 
+            # 将字典添加到 sampled_models 中
+            # sampled_models.append(client_params)
         return sampled_models
 
-    def combine_samples(self, samples):
+    def combine_samples(self, samples, client_id):
         combined_params = {}
-        for param_name, param in samples[0].state_dict().items():
-            param_list = [sample.state_dict()[param_name].view(-1) for sample in samples]
-            combined_params[param_name] = torch.stack(param_list, dim=0).mean(dim=0)
+        for client_samples in samples:
+            model = client_samples[client_id]
+            for param_name, param in model.state_dict().items():
+                param_list = [sample[client_id][param_name].view(-1) for sample in samples]
+                combined_params[param_name] = torch.stack(param_list, dim=0).mean(dim=0)
 
         return combined_params
 
@@ -74,7 +81,10 @@ class SGLDProcess:
         for client in self.clients:
             client_id = client.client_id
             self.original_params[client_id] = client.get_local_model().state_dict()
-            self.sgld_params[client_id] = self.combine_samples(sgld_samples)
+            print(sgld_samples[client_id])
+            print(type(sgld_samples[client_id]))
+            self.sgld_params[client_id] = sgld_samples[client_id]
+            print(f'{client_id}的后验矩阵{self.sgld_params[client_id]}')
 
         return self
 

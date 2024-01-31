@@ -1,15 +1,39 @@
 import torch
 import torch.nn.functional as F
 
+from utils import sgld_params2dict
+
+
 class AttentionAggregator:
     def __init__(self):
         pass
 
+    # def transformFormat(self,client_sgld_params):
+    #     global params
+    #     for param in client_sgld_params:
+    #         params = param.state_dict()
+    #     param_tensors = dict((key, value) for key, value in params.items())
+    #     return param_tensors
     def calculate_attention_scores(self, client_sgld_params, pure_client_sgld_params):
+        global params
         attention_scores = {}
-        for param_name in client_sgld_params.keys():
-            client_param = client_sgld_params[param_name]
-            pure_client_param = pure_client_sgld_params[param_name]
+        print(client_sgld_params)
+        print(client_sgld_params[0].state_dict())
+        print(type(client_sgld_params[0].state_dict()))
+        # def transformFormat(clientparams):
+        #     for param in clientparams:
+        #         params = param.state_dict()
+        #     param_tensors = dict((key, value) for key, value in params.items())
+        #     return param_tensors
+
+        client_params_tensors = sgld_params2dict(client_sgld_params)
+        pure_params_tensors = sgld_params2dict(pure_client_sgld_params)
+
+        print(client_params_tensors)
+        print(type(client_params_tensors))
+        for param_name in client_params_tensors.keys():
+            client_param = client_params_tensors[param_name]
+            pure_client_param = pure_params_tensors[param_name]
 
             # 计算注意力分数，使用点积注意力并进行缩放
             scale_factor = client_param.numel()  # 缩放因子为参数的数量

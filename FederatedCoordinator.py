@@ -1,5 +1,7 @@
 import sys
 
+from utils import sgld_params2dict
+
 sys.path.append("..")
 
 import copy
@@ -102,6 +104,8 @@ class FederatedCoordinator:
             for client in self.clients:
                 client_sgld_params = sgld_process.sgld_params[client.client_id]
                 print(client_sgld_params)
+                print(type(client_sgld_params))
+                ##这里两个客户端的参数是一样，明天检查一下sgldprocess的sample里面是不是有点问题
                 self.attention_scores[client.client_id] = attention_aggregator.calculate_attention_scores(
                     client_sgld_params,
                     pure_client_sgld_params)
@@ -120,7 +124,7 @@ class FederatedCoordinator:
             # 获取客户端2的采样后的参数
             client_id_to_check = 1  # 请注意索引是从0开始的
             sgld_params_client2 = sgld_process.sgld_params[client_id_to_check]
-
+            sgld_params_client2 = sgld_params2dict(sgld_params_client2)
             # 输出客户端2采样后的参数张量
             for param_name, param_tensor in sgld_params_client2.items():
                 print(f"Parameter Name: {param_name}")

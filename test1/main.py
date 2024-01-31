@@ -8,11 +8,11 @@ from net.MNISTNet import MNISTNet
 from data.DatasetLoader import DatasetLoader
 
 # 定义一些超参数
-num_clients = 2      # 5
+num_clients = 5      # 5  2
 num_epochs = 1    #3
-sgld_samples = 5   #10 后验分布采样样本数 20
+sgld_samples = 20   #10 后验分布采样样本数 20  5
 num_epochs_update = 1   #5
-num_epochs_client = 5   #10 20
+num_epochs_client = 20   #10 20  5
 num_epochs_pretrain = 10  #10
 
 # # 数据集加载器
