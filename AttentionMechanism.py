@@ -17,9 +17,9 @@ class AttentionAggregator:
     def calculate_attention_scores(self, client_sgld_params, pure_client_sgld_params):
         global params
         attention_scores = {}
-        print(client_sgld_params)
-        print(client_sgld_params[0].state_dict())
-        print(type(client_sgld_params[0].state_dict()))
+        # print(client_sgld_params)
+        # print(client_sgld_params[0].state_dict())
+        # print(type(client_sgld_params[0].state_dict()))
         # def transformFormat(clientparams):
         #     for param in clientparams:
         #         params = param.state_dict()
@@ -29,17 +29,21 @@ class AttentionAggregator:
         client_params_tensors = sgld_params2dict(client_sgld_params)
         pure_params_tensors = sgld_params2dict(pure_client_sgld_params)
 
-        print(client_params_tensors)
-        print(type(client_params_tensors))
+        # print(client_params_tensors)
+        # print(type(client_params_tensors))
         for param_name in client_params_tensors.keys():
             client_param = client_params_tensors[param_name]
             pure_client_param = pure_params_tensors[param_name]
 
             # 计算注意力分数，使用点积注意力并进行缩放
-            scale_factor = client_param.numel()  # 缩放因子为参数的数量
+            # scale_factor = client_param.numel()  # 缩放因子为参数的数量
+            scale_factor = pure_client_param.numel()
+            print(f'{param_name} scale factor : {scale_factor}')
             # 计算注意力分数，使用点积注意力
-            attention_score = torch.sum(client_param * pure_client_param) / scale_factor
-
+            dot_product = torch.sum(client_param * pure_client_param)
+            print(f'{param_name} dot product : {dot_product}')
+            attention_score = dot_product / scale_factor
+            print(f'{param_name} attention score : {attention_score}')
             # 使用 sigmoid 激活
             attention_score = torch.sigmoid(attention_score)
 

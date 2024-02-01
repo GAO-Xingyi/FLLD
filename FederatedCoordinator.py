@@ -1,5 +1,6 @@
 import sys
 
+from DataPoisoner import DataPoisoner
 from utils import sgld_params2dict
 
 sys.path.append("..")
@@ -14,7 +15,8 @@ from AttentionMechanism import AttentionAggregator
 
 class FederatedCoordinator:
     def __init__(self, global_model, dataset_name, num_clients, num_epochs_pretrain=10,
-                 num_epochs_client=10, num_epochs_update=5, sgld_samples=5):
+                 num_epochs_client=10, num_epochs_update=5, sgld_samples=5, posion_client_id=0, poisoned_fraction=0,
+                 anomaly_intensity=0):
         self.global_model = global_model
         self.dataset_name = dataset_name
         self.num_clients = num_clients
@@ -28,6 +30,9 @@ class FederatedCoordinator:
         self.clients = None
         self.pure_client = None
         self.attention_scores = {}
+        self.posion_client_id = posion_client_id
+        self.poisoned_fraction = poisoned_fraction
+        self.anomaly_intensity = anomaly_intensity
 
     def average_aggregation(self, models):
         avg_state_dict = {}
@@ -49,6 +54,7 @@ class FederatedCoordinator:
         pure_client_model = copy.deepcopy(self.global_model)
         pure_client = Client(client_id="PureClient", local_model=pure_client_model, train_loader=train_loader,
                              test_loader=test_loader, dataset_type=self.dataset_name,
+                             num_epochs=self.num_epochs_client,
                              num_pretrain_epochs=self.num_epochs_pretrain)
         self.pure_client = pure_client
         self.global_model = self.pure_client.local_model
@@ -59,7 +65,7 @@ class FederatedCoordinator:
         # 保存纯净样本机的参数
         self.initial_params = self.pure_client.get_local_model().state_dict()
 
-        print("cure machine", self.pure_client.local_model)
+        # print("cure machine", self.pure_client.local_model)
 
     def build_client(self):
         clients = []
@@ -86,8 +92,20 @@ class FederatedCoordinator:
             # 外部循环 epoch 决定模型更新次数（进行几次参数更新与参数合并）
 
             # Each client trains its local model
+            poisoner = DataPoisoner(self.poisoned_fraction, self.anomaly_intensity)
             for client in self.clients:
-                client.train()
+                if client.client_id is self.posion_client_id:
+                    poisoned_train_data_loader = poisoner.poison_data(client.train_loader)
+                    poisoned_test_data_loader = poisoner.poison_data(client.test_loader)
+                    client.train_loader = poisoned_train_data_loader
+                    client.test_loader = poisoned_test_data_loader
+                    client.train()
+                    print(f'{client.client_id} is poison')
+                else:
+                    client.train()
+                    print(f'{client.client_id} is normal')
+
+
 
             self.pure_client.train()
 
@@ -111,8 +129,6 @@ class FederatedCoordinator:
                     pure_client_sgld_params)
 
             print(self.attention_scores)
-            print(self.attention_scores[0])
-            print(self.attention_scores[1])
 
             ## attention 机制做好了，明天要评估在毒化攻击下Attention分数是否可以检测到
 
