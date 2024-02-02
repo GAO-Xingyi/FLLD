@@ -13,11 +13,10 @@ num_clients = 2      # 5  2
 num_epochs = 1    #3
 sgld_samples = 20   #10 后验分布采样样本数 20  5
 num_epochs_update = 1   #5
-num_epochs_client = 20   #10 20  5
-num_epochs_pretrain = 10  #10
+num_epochs_client = 25   #10 20  5  客户端训练多少次提交参数
+num_epochs_pretrain = 2  #10
 posion_client_id = 1    # 0
 poisoned_fraction = 0.2
-anomaly_intensity = 0.1
 
 # # 数据集加载器
 # mnist_loader = DatasetLoader(dataset_name='MNIST')
@@ -33,7 +32,7 @@ global_model = MNISTNet()
 # 创建联邦学习协调器
 server = FederatedCoordinator(global_model, 'MNIST', num_clients, num_epochs_pretrain, num_epochs_client,
                               num_epochs_update, sgld_samples, posion_client_id=posion_client_id,
-                              poisoned_fraction=poisoned_fraction, anomaly_intensity=anomaly_intensity)
+                              poisoned_fraction=poisoned_fraction)
 
 #加载一份纯净数据实例化纯净样本机
 server.setup_pure_client()

@@ -15,8 +15,7 @@ from AttentionMechanism import AttentionAggregator
 
 class FederatedCoordinator:
     def __init__(self, global_model, dataset_name, num_clients, num_epochs_pretrain=10,
-                 num_epochs_client=10, num_epochs_update=5, sgld_samples=5, posion_client_id=0, poisoned_fraction=0,
-                 anomaly_intensity=0):
+                 num_epochs_client=10, num_epochs_update=5, sgld_samples=5, posion_client_id=0, poisoned_fraction=0):
         self.global_model = global_model
         self.dataset_name = dataset_name
         self.num_clients = num_clients
@@ -32,7 +31,6 @@ class FederatedCoordinator:
         self.attention_scores = {}
         self.posion_client_id = posion_client_id
         self.poisoned_fraction = poisoned_fraction
-        self.anomaly_intensity = anomaly_intensity
 
     def average_aggregation(self, models):
         avg_state_dict = {}
@@ -92,13 +90,13 @@ class FederatedCoordinator:
             # 外部循环 epoch 决定模型更新次数（进行几次参数更新与参数合并）
 
             # Each client trains its local model
-            poisoner = DataPoisoner(self.poisoned_fraction, self.anomaly_intensity)
+            poisoner = DataPoisoner(self.poisoned_fraction)
             for client in self.clients:
                 if client.client_id is self.posion_client_id:
                     poisoned_train_data_loader = poisoner.poison_data(client.train_loader)
-                    poisoned_test_data_loader = poisoner.poison_data(client.test_loader)
+                    # poisoned_test_data_loader = poisoner.poison_data(client.test_loader)
                     client.train_loader = poisoned_train_data_loader
-                    client.test_loader = poisoned_test_data_loader
+                    # client.test_loader = poisoned_test_data_loader
                     client.train()
                     print(f'{client.client_id} is poison')
                 else:
@@ -117,16 +115,20 @@ class FederatedCoordinator:
             pure_sample = SGLDProcess([self.pure_client], self.pure_train_loader, self.sgld_samples)
             pure_sample.startup()
 
+            global_sample = SGLDProcess(None, self.pure_train_loader, self.sgld_samples, global_model=self.global_model)
+            global_sample.startup4model()
+
             attention_aggregator = AttentionAggregator()
             pure_client_sgld_params = pure_sample.sgld_params["PureClient"]
             for client in self.clients:
                 client_sgld_params = sgld_process.sgld_params[client.client_id]
-                print(client_sgld_params)
-                print(type(client_sgld_params))
+                # print(client_sgld_params)
+                # print(type(client_sgld_params))
                 ##这里两个客户端的参数是一样，明天检查一下sgldprocess的sample里面是不是有点问题
                 self.attention_scores[client.client_id] = attention_aggregator.calculate_attention_scores(
                     client_sgld_params,
-                    pure_client_sgld_params)
+                    pure_client_sgld_params,
+                    global_sample.sgld_params)
 
             print(self.attention_scores)
 
@@ -135,7 +137,7 @@ class FederatedCoordinator:
 
             # pure_params = pure_sample.sgld_params
             # print("pure params", torch.Tensor([pure_params[key] for key in pure_params]).size())
-
+            """
             ##这里实验一下，发现可以跑通，今天可以休息了
             # 获取客户端2的采样后的参数
             client_id_to_check = 1  # 请注意索引是从0开始的
@@ -145,7 +147,7 @@ class FederatedCoordinator:
             for param_name, param_tensor in sgld_params_client2.items():
                 print(f"Parameter Name: {param_name}")
                 print(param_tensor)
-
+            """
             print("attention_scores:", self.attention_scores)
 
 

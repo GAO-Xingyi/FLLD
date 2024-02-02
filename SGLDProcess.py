@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 class SGLDProcess:
     # noise_scale，lr越大相似度越高
-    def __init__(self, clients, pure_data_loader, num_samples, lr=0.05, noise_scale=0.1):
+    def __init__(self, clients, pure_data_loader, num_samples, lr=0.01, noise_scale=0.2, global_model=None):
         self.clients = clients
         self.pure_data_loader = pure_data_loader
         self.num_samples = num_samples
@@ -14,6 +14,8 @@ class SGLDProcess:
         self.original_params = {}  # 存储原始参数的字典
         self.sgld_params = {}  # 存储 SGLD 参数的字典
         self.clients_sgld = None
+        self.global_model = global_model
+        self.global_model_sample = None
 
     # def sgld_step(self):
     #     for client in self.clients_sgld:
@@ -66,6 +68,42 @@ class SGLDProcess:
             # sampled_models.append(client_params)
         return sampled_models
 
+    def model_sample(self):
+        sampled_models = []
+        self.global_model_sample = self.global_model
+
+        for _ in range(self.num_samples):
+            # client_params = {}
+            # 执行一次梯度计算
+            cloned_client = self.global_model_sample
+            cloned_client.train()
+            cloned_client.zero_grad()
+
+            # 使用 tqdm 创建进度条
+            data_loader = tqdm(self.pure_data_loader, desc=f'global Sampling '
+                                                           f'{_ + 1}/{self.num_samples}', leave=False)
+
+            for data, target in data_loader:
+                output = cloned_client(data)
+                loss = nn.functional.nll_loss(output, target)
+                loss.backward()
+
+                # # 添加以下打印语句以检查梯度
+                # for param in cloned_client.parameters():
+                #     print(f"Gradient for {param}: {param.grad}")
+
+                for param in cloned_client.parameters():
+                    #print(f"Gradient for {param}: {param.grad}")
+                    noise = torch.normal(0, self.noise_scale * torch.sqrt(torch.tensor(self.lr)), size=param.size())
+                    param.data.add_(-self.lr * param.grad - noise)
+            # 在每个客户端上执行 SGLD 步骤
+            # self.sgld_step()
+            self.global_model_sample = cloned_client
+
+            sampled_models.append(copy.deepcopy(cloned_client))
+
+        return sampled_models
+
     def combine_samples(self, samples, client_id):
         combined_params = {}
         for client_samples in samples:
@@ -82,10 +120,20 @@ class SGLDProcess:
         for client in self.clients:
             client_id = client.client_id
             self.original_params[client_id] = client.get_local_model().state_dict()
-            print(sgld_samples[client_id])
-            print(type(sgld_samples[client_id]))
+            # print(sgld_samples[client_id])
+            # print(type(sgld_samples[client_id]))
             self.sgld_params[client_id] = sgld_samples[client_id]
-            print(f'{client_id}的后验矩阵{self.sgld_params[client_id]}')
+            # print(f'{client_id}的后验矩阵{self.sgld_params[client_id]}')
+
+        return self
+
+    def startup4model(self):
+        sgld_samples = self.model_sample()
+
+            # print(sgld_samples[client_id])
+            # print(type(sgld_samples[client_id]))
+        self.sgld_params = sgld_samples
+            # print(f'{client_id}的后验矩阵{self.sgld_params[client_id]}')
 
         return self
 
