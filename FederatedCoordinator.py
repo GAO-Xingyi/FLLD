@@ -11,6 +11,7 @@ from SGLDProcess import SGLDProcess
 from client import Client
 from data.DatasetLoader import DatasetLoader
 from AttentionMechanism import AttentionAggregator
+import logging
 
 
 class FederatedCoordinator:
@@ -103,8 +104,6 @@ class FederatedCoordinator:
                     client.train()
                     print(f'{client.client_id} is normal')
 
-
-
             self.pure_client.train()
 
             sgld_process = SGLDProcess(self.clients, self.pure_train_loader, self.sgld_samples)
@@ -115,8 +114,8 @@ class FederatedCoordinator:
             pure_sample = SGLDProcess([self.pure_client], self.pure_train_loader, self.sgld_samples)
             pure_sample.startup()
 
-            global_sample = SGLDProcess(None, self.pure_train_loader, self.sgld_samples, global_model=self.global_model)
-            global_sample.startup4model()
+            # global_sample = SGLDProcess(None, self.pure_train_loader, self.sgld_samples, global_model=self.global_model)
+            # global_sample.startup4model()
 
             attention_aggregator = AttentionAggregator()
             pure_client_sgld_params = pure_sample.sgld_params["PureClient"]
@@ -127,13 +126,22 @@ class FederatedCoordinator:
                 ##这里两个客户端的参数是一样，明天检查一下sgldprocess的sample里面是不是有点问题
                 self.attention_scores[client.client_id] = attention_aggregator.calculate_attention_scores(
                     client_sgld_params,
-                    pure_client_sgld_params,
-                    global_sample.sgld_params)
+                    pure_client_sgld_params)
 
             print(self.attention_scores)
 
-            ## attention 机制做好了，明天要评估在毒化攻击下Attention分数是否可以检测到
+            # Collect attention scores for fc1.bias and fc2.weight
+            fc1_bias_scores = {client_id: self.attention_scores[client_id]['fc1.bias'] for client_id in
+                               self.attention_scores}
+            fc2_weight_scores = {client_id: self.attention_scores[client_id]['fc2.weight'] for client_id in
+                                 self.attention_scores}
 
+            # Log attention scores for fc1.bias and fc2.weight
+            logging.info(f'poisoned fraction : {self.poisoned_fraction}')
+            logging.info(f'Attention Scores for fc1.bias: {fc1_bias_scores}')
+            logging.info(f'Attention Scores for fc2.weight: {fc2_weight_scores}')
+
+            ## attention 机制做好了，明天要评估在毒化攻击下Attention分数是否可以检测到
 
             # pure_params = pure_sample.sgld_params
             # print("pure params", torch.Tensor([pure_params[key] for key in pure_params]).size())

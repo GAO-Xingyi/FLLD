@@ -14,7 +14,7 @@ class AttentionAggregator:
     #         params = param.state_dict()
     #     param_tensors = dict((key, value) for key, value in params.items())
     #     return param_tensors
-    def calculate_attention_scores(self, client_sgld_params, pure_client_sgld_params, global_sgld_params):
+    def calculate_attention_scores(self, client_sgld_params, pure_client_sgld_params):
         global params
         attention_scores = {}
         # print(client_sgld_params)
@@ -28,14 +28,14 @@ class AttentionAggregator:
 
         client_params_tensors = sgld_params2dict(client_sgld_params)
         pure_params_tensors = sgld_params2dict(pure_client_sgld_params)
-        global_params_tensors = sgld_params2dict(global_sgld_params)
+        # global_params_tensors = sgld_params2dict(global_sgld_params)
 
         # print(client_params_tensors)
         # print(type(client_params_tensors))
         for param_name in client_params_tensors.keys():
             client_param = client_params_tensors[param_name]
             pure_client_param = pure_params_tensors[param_name]
-            global_params = global_params_tensors[param_name]
+            # global_params = global_params_tensors[param_name]
 
             """
             # 点积
@@ -48,24 +48,24 @@ class AttentionAggregator:
             print(f'{param_name} dot product : {dot_product}')
             attention_score = dot_product / scale_factor
             # attention_score = dot_product
-            print(f'{param_name} attention score : {attention_score}')
+            print(f'dot product (without sigmoid) : {param_name} attention score : {attention_score}')
             # 使用 sigmoid 激活
             attention_score = torch.sigmoid(attention_score)
+            print(f'dot product score (sigmoid) : {param_name} attention score : {attention_score}')
             """
 
-            """
             # 目前余弦是比较好的方法
-            余弦
+            #余弦
             # 计算余弦相似度
             cosine_similarity = F.cosine_similarity(client_param.flatten(), pure_client_param.flatten(), dim=0)
             print(f'{param_name} cosine similarity: {cosine_similarity}')
 
             # 使用 sigmoid 激活
             attention_score = torch.sigmoid(cosine_similarity)
-            print(f'{param_name} attention score : {attention_score}')
-            """
+            print(f'cosine similarity attention score : {param_name} attention score : {attention_score}')
 
 
+            """       
             #马氏距离
             # 计算马氏距离的平方
             mahalanobis_distance_sq = torch.sum((client_param - pure_client_param).pow(2))
@@ -77,10 +77,14 @@ class AttentionAggregator:
             # attention_score = torch.sigmoid(mahalanobis_distance_sq)
             # attention_score = mahalanobis_distance_sq / euclidean_distance_sq
             # attention_score = mahalanobis_distance_sq / mahalanobis_distance_sq_global
-            attention_score = mahalanobis_distance_sq_global - mahalanobis_distance_sq
+            print(f'mahalanobis_distance_sq_global - mahalanobis_distance_sq : {mahalanobis_distance_sq_global - mahalanobis_distance_sq}')
+            attention_score = mahalanobis_distance_sq_global - mahalanobis_distance_sq /\
+                              min(mahalanobis_distance_sq_global, mahalanobis_distance_sq)
             print(f'{param_name} attention score : before sigmoid {attention_score}')
             attention_score = torch.sigmoid(attention_score)
-            print(f'{param_name} attention score : after sigmoid {attention_score}')
+            print(f'mahalanobis distance attention score : {param_name} attention score : after sigmoid {attention_score}')
+            """
+
             attention_scores[param_name] = attention_score
 
         return attention_scores
