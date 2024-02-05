@@ -91,8 +91,10 @@ class AttentionAggregator:
             kl_divergence = F.kl_div(F.log_softmax(client_param, dim=0), F.softmax(pure_client_param, dim=0), reduction='batchmean')
             print(f'{param_name} KL Divergence: {kl_divergence}')
 
-            # 使用 sigmoid 激活
-            attention_score = torch.sigmoid(-kl_divergence)
+            # # 使用 sigmoid 激活
+            # attention_score = torch.sigmoid(-kl_divergence)
+            alpha = 10  # 超参数，可以调整
+            attention_score = torch.exp(-alpha * kl_divergence)
             print(f'KL Divergence attention score : {param_name} attention score : {attention_score}')
 
 

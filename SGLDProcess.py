@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 class SGLDProcess:
     # noise_scale，lr越大相似度越高
-    def __init__(self, clients, pure_data_loader, num_samples, lr=0.0001, noise_scale=0.2):
+    def __init__(self, clients, pure_data_loader, num_samples, lr=0.0001, noise_scale=0.0001):
         self.clients = clients
         self.pure_data_loader = pure_data_loader
         self.num_samples = num_samples

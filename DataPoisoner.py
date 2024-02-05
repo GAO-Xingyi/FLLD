@@ -1,9 +1,11 @@
 import torch
 import torch.nn.functional as F
 
+
 class DataPoisoner:
     def __init__(self, poisoned_fraction=0.2):
         self.poisoned_fraction = poisoned_fraction
+
     def poison_data(self, client_data_loader):
         # 获取原始数据集和索引
         original_dataset = client_data_loader.dataset.dataset
@@ -37,7 +39,6 @@ class DataPoisoner:
 
         return poisoned_data_loader
 
-
     def poison_function(self, data):
 
         # 引入离散的异常值
@@ -50,7 +51,6 @@ class DataPoisoner:
         target = torch.randint(0, 10, size=(1,), dtype=torch.long).item()
 
         return data, target
-
 
     """
     def poison_function(self, data):
@@ -86,4 +86,3 @@ class DataPoisoner:
     #     data = data.squeeze(0)
     #
     #     return data
-
