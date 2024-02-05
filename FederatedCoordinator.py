@@ -1,6 +1,7 @@
 import sys
 
 from DataPoisoner import DataPoisoner
+from One_ClassSVM import One_ClassSVM
 from utils import sgld_params2dict
 
 sys.path.append("..")
@@ -117,6 +118,8 @@ class FederatedCoordinator:
             # global_sample = SGLDProcess(None, self.pure_train_loader, self.sgld_samples, global_model=self.global_model)
             # global_sample.startup4model()
 
+            """
+            ### Attention
             attention_aggregator = AttentionAggregator()
             pure_client_sgld_params = pure_sample.sgld_params["PureClient"]
             for client in self.clients:
@@ -135,11 +138,24 @@ class FederatedCoordinator:
                                self.attention_scores}
             fc2_weight_scores = {client_id: self.attention_scores[client_id]['fc2.weight'] for client_id in
                                  self.attention_scores}
+            """
 
+            svm = One_ClassSVM()
+            pure_client_sgld_params = pure_sample.sgld_params["PureClient"]
+            for client in self.clients:
+                client_sgld_params = sgld_process.sgld_params[client.client_id]
+                self.attention_scores[client.client_id] = svm.runsvm(
+                    client_sgld_params,
+                    pure_client_sgld_params)
+
+
+
+            """
             # Log attention scores for fc1.bias and fc2.weight
             logging.info(f'poisoned fraction : {self.poisoned_fraction}')
             logging.info(f'Attention Scores for fc1.bias: {fc1_bias_scores}')
             logging.info(f'Attention Scores for fc2.weight: {fc2_weight_scores}')
+            """
 
             ## attention 机制做好了，明天要评估在毒化攻击下Attention分数是否可以检测到
 

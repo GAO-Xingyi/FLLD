@@ -54,6 +54,7 @@ class AttentionAggregator:
             print(f'dot product score (sigmoid) : {param_name} attention score : {attention_score}')
             """
 
+            """
             # 目前余弦是比较好的方法
             #余弦
             # 计算余弦相似度
@@ -63,7 +64,7 @@ class AttentionAggregator:
             # 使用 sigmoid 激活
             attention_score = torch.sigmoid(cosine_similarity)
             print(f'cosine similarity attention score : {param_name} attention score : {attention_score}')
-
+            """
 
             """       
             #马氏距离
@@ -84,6 +85,17 @@ class AttentionAggregator:
             attention_score = torch.sigmoid(attention_score)
             print(f'mahalanobis distance attention score : {param_name} attention score : after sigmoid {attention_score}')
             """
+
+
+            # 计算 KL 散度
+            kl_divergence = F.kl_div(F.log_softmax(client_param, dim=0), F.softmax(pure_client_param, dim=0), reduction='batchmean')
+            print(f'{param_name} KL Divergence: {kl_divergence}')
+
+            # 使用 sigmoid 激活
+            attention_score = torch.sigmoid(-kl_divergence)
+            print(f'KL Divergence attention score : {param_name} attention score : {attention_score}')
+
+
 
             attention_scores[param_name] = attention_score
 

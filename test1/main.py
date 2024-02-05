@@ -9,6 +9,7 @@ from net.MNISTNet import MNISTNet
 from data.DatasetLoader import DatasetLoader
 import logging
 
+
 # 定义一些超参数
 num_clients = 2      # 5  2
 num_epochs = 1    #3
@@ -17,7 +18,7 @@ num_epochs_update = 1   #5
 num_epochs_client = 25   #10 20  5  客户端训练多少次提交参数
 num_epochs_pretrain = 2  #10
 posion_client_id = 1    # 0
-poisoned_fraction = 0.9
+poisoned_fraction = 0.2
 
 # # 数据集加载器
 # mnist_loader = DatasetLoader(dataset_name='MNIST')
@@ -46,7 +47,7 @@ pure_client = server.pure_client
 for epoch in range(num_epochs):
     # 外部循环epoch决定模型更新次数
 
-    logging.basicConfig(filename='./test1.log', level=logging.INFO)
+    # logging.basicConfig(filename='./test1.log', level=logging.INFO)
     server.federated_learning()
 
 
