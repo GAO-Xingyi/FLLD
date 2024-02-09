@@ -55,7 +55,6 @@ class AttentionAggregator:
             """
 
             """
-            # 目前余弦是比较好的方法
             #余弦
             # 计算余弦相似度
             cosine_similarity = F.cosine_similarity(client_param.flatten(), pure_client_param.flatten(), dim=0)
