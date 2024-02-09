@@ -1,0 +1,15 @@
+INFO:root:poisoned fraction : 0.1
+INFO:root:Attention Scores for fc1.weight: {0: tensor(0.9981), 1: tensor(0.6211)}
+INFO:root:Attention Scores for fc2.weight: {0: tensor(0.9369), 1: tensor(3.8621e-38)}
+INFO:root:poisoned fraction : 0.2
+INFO:root:Attention Scores for fc1.weight: {0: tensor(0.9986), 1: tensor(0.5098)}
+INFO:root:Attention Scores for fc2.weight: {0: tensor(0.9556), 1: tensor(0.)}
+INFO:root:poisoned fraction : 0.3
+INFO:root:Attention Scores for fc1.weight: {0: tensor(0.9984), 1: tensor(0.)}
+INFO:root:Attention Scores for fc2.weight: {0: tensor(0.9425), 1: tensor(0.)}
+INFO:root:poisoned fraction : 0.4
+INFO:root:Attention Scores for fc1.weight: {0: tensor(0.9985), 1: tensor(0.)}
+INFO:root:Attention Scores for fc2.weight: {0: tensor(0.9486), 1: tensor(0.)}
+INFO:root:poisoned fraction : 0.5
+INFO:root:Attention Scores for fc1.weight: {0: tensor(0.9986), 1: tensor(0.)}
+INFO:root:Attention Scores for fc2.weight: {0: tensor(0.9519), 1: tensor(0.)}
