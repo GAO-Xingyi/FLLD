@@ -13,3 +13,6 @@ INFO:root:Attention Scores for fc2.weight: {0: tensor(0.9486), 1: tensor(0.)}
 INFO:root:poisoned fraction : 0.5
 INFO:root:Attention Scores for fc1.weight: {0: tensor(0.9986), 1: tensor(0.)}
 INFO:root:Attention Scores for fc2.weight: {0: tensor(0.9519), 1: tensor(0.)}
+INFO:root:poisoned fraction : 0.6
+INFO:root:Attention Scores for fc1.weight: {0: tensor(0.9986), 1: tensor(0.)}
+INFO:root:Attention Scores for fc2.weight: {0: tensor(0.9542), 1: tensor(0.)}
