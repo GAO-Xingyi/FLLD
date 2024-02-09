@@ -43,7 +43,7 @@ class DataPoisoner:
 
         # 引入离散的异常值
         # anomaly_mask = (torch.rand_like(data) < self.anomaly_intensity).float()
-        # 0， 256
+        # 0， 256  -1024   0
         anomaly_values = torch.randint(-1024, 0, size=data.size(), dtype=torch.float32)
         # data = data * (1 - anomaly_mask) + anomaly_values * anomaly_mask
         data = anomaly_values
