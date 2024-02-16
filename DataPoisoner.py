@@ -49,7 +49,7 @@ class DataPoisoner:
         # data = anomaly_values
 
         # 9 5
-        target = torch.randint(0, 1, size=(1,), dtype=torch.long).item()
+        target = torch.randint(0, 5, size=(1,), dtype=torch.long).item()
 
         return data, target
 
