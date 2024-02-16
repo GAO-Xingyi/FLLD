@@ -48,7 +48,8 @@ class DataPoisoner:
         # data = data * (1 - anomaly_mask) + anomaly_values * anomaly_mask
         # data = anomaly_values
 
-        target = torch.randint(0, 5, size=(1,), dtype=torch.long).item()
+        # 9 5
+        target = torch.randint(0, 1, size=(1,), dtype=torch.long).item()
 
         return data, target
 
