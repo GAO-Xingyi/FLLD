@@ -27,8 +27,8 @@ class DataPoisoner:
             # 判断是否对该批次进行毒化
             if idx in poisoned_indices:
                 # 对数据进行毒化操作
-                data, target = self.poison_function(data)
-
+                # data = self.poison_function(data)
+                target = self.label_poison(target)
             # 存储毒化后的数据
             poisoned_data.append((data, target))
 
@@ -44,15 +44,20 @@ class DataPoisoner:
         # 引入离散的异常值
         # anomaly_mask = (torch.rand_like(data) < self.anomaly_intensity).float()
         # 0， 256  -1024   0
-        # anomaly_values = torch.randint(-1024, 0, size=data.size(), dtype=torch.float32)
+        anomaly_values = torch.randint(-1024, 0, size=data.size(), dtype=torch.float32)
         # data = data * (1 - anomaly_mask) + anomaly_values * anomaly_mask
-        # data = anomaly_values
+        data = anomaly_values
 
+        # 9 5
+        # target = torch.randint(0, 5, size=(1,), dtype=torch.long).item()
+
+        return data
+
+    def label_poison(self, target):
         # 9 5
         target = torch.randint(0, 5, size=(1,), dtype=torch.long).item()
 
-        return data, target
-
+        return target
     """
     def poison_function(self, data):
         # 引入明显的异常值
