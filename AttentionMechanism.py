@@ -92,7 +92,7 @@ class AttentionAggregator:
 
             # # 使用 sigmoid 激活
             # attention_score = torch.sigmoid(-kl_divergence)
-            alpha = 10  # 超参数，可以调整
+            alpha = 10  # 超参数，可以调整 10
             attention_score = torch.exp(-alpha * kl_divergence)
             print(f'KL Divergence attention score : {param_name} attention score : {attention_score}')
 

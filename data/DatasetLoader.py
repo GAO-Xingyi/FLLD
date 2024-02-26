@@ -65,7 +65,7 @@ class DatasetLoader:
             # 使用 Dirichlet 分布生成每个类别的比例，num_clients 表示客户端数量
             alpha = torch.ones(10)  # 10个类别
             dirichlet_dist = Dirichlet(alpha)
-            class_proportions = dirichlet_dist.sample(torch.Size([num_clients]))
+            class_proportions = dirichlet_dist.sample(torch.Size([num_clients+1]))
 
             # 将数据集分为 num_clients 份，每份按照对应的类别比例划分
             subset_indices = []
