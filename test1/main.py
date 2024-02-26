@@ -47,7 +47,7 @@ pure_client = server.pure_client
 for epoch in range(num_epochs):
     # 外部循环epoch决定模型更新次数
 
-    logging.basicConfig(filename='./non-iid-label.log', level=logging.INFO)
+    logging.basicConfig(filename='./non-iid.log', level=logging.INFO)
     server.federated_learning()
 
 
