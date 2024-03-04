@@ -27,8 +27,8 @@ class DataPoisoner:
             # 判断是否对该批次进行毒化
             if idx in poisoned_indices:
                 # 对数据进行毒化操作
-                data = self.poison_function(data)
-                # target = self.label_poison(target)
+                # data = self.poison_function(data)
+                target = self.label_poison(target)
             # 存储毒化后的数据
             poisoned_data.append((data, target))
 

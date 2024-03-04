@@ -18,7 +18,7 @@ num_epochs_update = 1   #5
 num_epochs_client = 25   #10 20  5  客户端训练多少次提交参数
 num_epochs_pretrain = 2  #10
 posion_client_id = 1    # 0
-poisoned_fraction = 0.4
+poisoned_fraction = 0.1
 
 # # 数据集加载器
 # mnist_loader = DatasetLoader(dataset_name='MNIST')
@@ -47,7 +47,7 @@ pure_client = server.pure_client
 for epoch in range(num_epochs):
     # 外部循环epoch决定模型更新次数
 
-    logging.basicConfig(filename='./non-iid.log', level=logging.INFO)
+    logging.basicConfig(filename='./non-iid-label.log', level=logging.INFO)
     server.federated_learning()
 
 
