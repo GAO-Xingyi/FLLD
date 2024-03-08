@@ -18,7 +18,7 @@ num_epochs_update = 1   #5
 num_epochs_client = 25   #10 20  5  客户端训练多少次提交参数
 num_epochs_pretrain = 2  #10
 posion_client_id = 1    # 0
-poisoned_fraction = 0.7
+poisoned_fraction = 0.9
 
 # # 数据集加载器
 # mnist_loader = DatasetLoader(dataset_name='MNIST')
