@@ -15,10 +15,10 @@ num_clients = 2      # 5  2
 num_epochs = 1    #3
 sgld_samples = 20   #10 后验分布采样样本数 20  5
 num_epochs_update = 1   #5
-num_epochs_client = 25   #10 20  5  客户端训练多少次提交参数
+num_epochs_client = 300   #10 20  5  客户端训练多少次提交参数  25
 num_epochs_pretrain = 2  #10
 posion_client_id = 1    # 0
-poisoned_fraction = 0.9
+poisoned_fraction = 0.1
 
 # # 数据集加载器
 # mnist_loader = DatasetLoader(dataset_name='MNIST')
